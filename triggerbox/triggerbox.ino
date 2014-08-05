@@ -1,13 +1,13 @@
-/* 
+/*
  Triggerbox
- 
+
  Purpose:
  read a time interval from ethernet and send a trigger signal on
  a port at fixed time steps.
- 
+
  */
 
-#include <SPI.h> 
+#include <SPI.h>
 #include <Ethernet.h>
 
 
@@ -21,10 +21,11 @@ EthernetServer server(PORT);
 unsigned long time;
 unsigned long last_time;
 unsigned int period;
+String period_str = "";
 
 void trigger();
 void check_time();
-void report();
+void report(EthernetClient &client = 0);
 
 void setup()
 {
@@ -42,19 +43,37 @@ void setup()
 
 void loop()
 {
+  EthernetClient client = server.available();
+  if (client) {
+    char cmd = client.read();
+    if (cmd == 'P') {
+      while (client.available() > 0)
+        period_str += client.read();
+      period = period_str.toInt();
+      period_str = "";
+    }
+    report();
+  }
   check_time();
 }
 
-void report()
+void report(EthernetClient &client)
 {
-  Serial.print(F("Triggering with period: "));
-  Serial.print(period);
-  Serial.println(F(" ms."));
+  if (client) {
+    client.print(F("Triggering with period: "));
+    client.print(period);
+    client.println(F(" ms."));
+    client.stop();
+  } else {
+    Serial.print(F("Triggering with period: "));
+    Serial.print(period);
+    Serial.println(F(" ms."));
+  }
 }
 
 #define PULSE 500
 void trigger()
-{ 
+{
   /* Send a PULSE ms trigger signal on pin TRIG */
   digitalWrite(TRIG, HIGH);
   delayMicroseconds(PULSE);
