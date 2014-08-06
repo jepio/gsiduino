@@ -25,7 +25,9 @@ String period_str = "";
 
 void trigger();
 void check_time();
-void report(EthernetClient &client = 0);
+
+static EthernetClient zero = EthernetClient();
+void report(EthernetClient &client = zero);
 
 void setup()
 {
@@ -85,7 +87,7 @@ void check_time()
 {
   /* Check if it is time for the trigger, and update clock */
   time = millis();
-  if ((time - last_time) > period){
+  if ((time - last_time) >= period){
     last_time = time;
     trigger();
   }
