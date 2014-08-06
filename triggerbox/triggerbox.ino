@@ -73,7 +73,7 @@ void report(EthernetClient &client)
   }
 }
 
-#define PULSE 500
+#define PULSE 500 /* microseconds */
 void trigger()
 {
   /* Send a PULSE ms trigger signal on pin TRIG */
