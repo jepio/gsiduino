@@ -38,7 +38,7 @@ def copy_file(filename):
 
 
 class FileListBuilder:
-    """Save and load the set of files in a list."""
+    """Save and load the set of processed files from a backup file"""
 
     def __init__(self, name):
         self.filename = name
@@ -73,12 +73,12 @@ def main():
     # read saved one if possible, if not creates empty set
     PROCESSED_FILES = flb.read_list()
 
+    start = time.time()
     while True:
         # load file list from current directory and subtract the ones that have
         # already been processed
         files = check_files().difference(PROCESSED_FILES)
         processes = []
-        start = time.time()
 
         # for each new file start copying and write to log
         for file in files:
@@ -96,13 +96,15 @@ def main():
             if outcome != 0:
                 raise RuntimeError("Outcome of copy is non-zero")
 
-        # backup list
-        flb.save_list(PROCESSED_FILES)
-        # update list of PROCESSED_FILES
-        PROCESSED_FILES.update(files)
+        if len(files) != 0:
+            # update list of PROCESSED_FILES
+            PROCESSED_FILES.update(files)
+            # backup list
+            flb.save_list(PROCESSED_FILES)
+
         stop = time.time()
-        print("Elapsed time {}".format(stop-start))    
-        print("PING")
+        print("PING: Elapsed time {}".format(stop-start))
+        start = time.time()
         time.sleep(PERIOD)
 
 if __name__ == "__main__":
