@@ -1,4 +1,4 @@
-﻿"""Perform a periodic backup of data. Tested with Python 3.4"""
+"""Perform a periodic backup of data. Tested with Python 3.4"""
 import os
 import time
 from subprocess import Popen, PIPE
@@ -81,9 +81,9 @@ def main():
         processes = []
 
         # for each new file start copying and write to log
-        for file in files:
-            processes.append(copy_file(file))
-            add_log_entry(file)
+        for file_ in files:
+            processes.append(copy_file(file_))
+            add_log_entry(file_)
 
         # for each copy process check the output, and wait for the longest
         # running one
