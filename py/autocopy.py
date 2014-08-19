@@ -77,7 +77,7 @@ def main():
     while True:
         # load file list from current directory and subtract the ones that have
         # already been processed
-        files = check_files().difference(PROCESSED_FILES)
+        files = check_files() - PROCESSED_FILES
         
         if files:
             processes = []
@@ -96,7 +96,7 @@ def main():
                 if outcome != 0:
                     raise RuntimeError("Outcome of copy is non-zero")
             # update list of PROCESSED_FILES
-            PROCESSED_FILES.update(files)
+            PROCESSED_FILES |= files
             # backup list
             flb.save_list(PROCESSED_FILES)
 
