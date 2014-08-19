@@ -89,11 +89,11 @@ def main():
             # running one
             for proc in processes:
                 outcome = proc.poll()
-                if outcome is not None:
+                if outcome is None:
+                    outcome = proc.wait()
+                if outcome == 0:
                     continue
                 else:
-                    outcome = proc.wait()
-                if outcome != 0:
                     raise RuntimeError("Outcome of copy is non-zero")
             # update list of PROCESSED_FILES
             PROCESSED_FILES |= files
