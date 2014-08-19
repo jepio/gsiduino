@@ -78,25 +78,23 @@ def main():
         # load file list from current directory and subtract the ones that have
         # already been processed
         files = check_files().difference(PROCESSED_FILES)
-        processes = []
-
-        # for each new file start copying and write to log
-        for file_ in files:
-            processes.append(copy_file(file_))
-            add_log_entry(file_)
-
-        # for each copy process check the output, and wait for the longest
-        # running one
-        for proc in processes:
-            outcome = proc.poll()
-            if outcome is not None:
-                continue
-            else:
-                outcome = proc.wait()
-            if outcome != 0:
-                raise RuntimeError("Outcome of copy is non-zero")
-
+        
         if files:
+            processes = []
+            # for each new file start copying and write to log
+            for file_ in files:
+                processes.append(copy_file(file_))
+                add_log_entry(file_)
+            # for each copy process check the output, and wait for the longest
+            # running one
+            for proc in processes:
+                outcome = proc.poll()
+                if outcome is not None:
+                    continue
+                else:
+                    outcome = proc.wait()
+                if outcome != 0:
+                    raise RuntimeError("Outcome of copy is non-zero")
             # update list of PROCESSED_FILES
             PROCESSED_FILES.update(files)
             # backup list
