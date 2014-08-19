@@ -96,7 +96,7 @@ def main():
             if outcome != 0:
                 raise RuntimeError("Outcome of copy is non-zero")
 
-        if len(files) != 0:
+        if files:
             # update list of PROCESSED_FILES
             PROCESSED_FILES.update(files)
             # backup list
