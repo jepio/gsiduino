@@ -1,5 +1,5 @@
 $addr = "http://the.earth.li/~sgtatham/putty/latest/x86/"
-$execs = @("pscp","putty","puttygen","pageant")
+$execs = @("pscp","plink","putty","puttygen","pageant")
 $path = (Get-Item -Path ".\" -Verbose).FullName
 $client = new-object System.Net.WebClient
 
