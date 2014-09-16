@@ -190,7 +190,8 @@ def loop(processed, flb):
     # get locally available files minus the transferred ones
     files = check_local().difference(processed)
     if files:
-        logging.info("Found new files:\n%s",pformat(files))
+        logging.info("Found new files:\n%s",pformat(files, indent=20,
+                                                    compact=True     ))
         # get rid of files that are too new
         files = set(filter(check_access, files))
         # transfer files
