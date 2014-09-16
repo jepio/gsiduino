@@ -138,19 +138,36 @@ def handle_process(in_tup, deq):
 def transfer_files(files):
     """Transfer files and return list of successfully transf. ones."""
     # for each new file start copying (asynchronously)
-    # only works with list compr. not gen. expr.
-    processes = [copy_file(file_) for file_ in files]
+    # creates a generator object that be used to late start the copying
+    processes = (copy_file(file_) for file_ in files)
     # deque for gathering data from threads
     deq = deque()
-    # wait for end of transfer
+    THREAD_LIMIT = 5
     # threaded version
-    threads = [threading.Thread(target=handle_process, args=(proc_tup, deq))
-               for proc_tup in processes]
-    for thread in threads:
+    threads = []
+    def join_threads():
+        # access to threads
+        nonlocal threads
+        # join all threads
+        for thread in threads:
+            thread.join()
+        # clear list
+        threads = []
+    # wait for end of transfer
+    for i, proc in enumerate(processes):
+        if i % THREAD_LIMIT == 0:
+            # join started threads before spawning new ones
+            join_threads()
+        thread = threading.Thread(target=handle_process,
+                                  args=(next(proc), deq)))
         thread.start()
-    for thread in threads:
-        thread.join()
+        threads.append(thread)
+    else:
+        # will execute as the last statement
+        join_threads()
+
     # serial version:
+    # process = [proc for proc in processes]
     # for proc in processes:
     #     handle_process(proc, dq)
     transferred = set(deq)
