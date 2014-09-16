@@ -54,7 +54,12 @@ def check_remote():
     """Return a set of files in remote directory."""
     proc = Popen(["plink", "-ssh", HOST, "ls", REMOTE_FOLDER], shell=True,
                  stdout=PIPE, stderr=PIPE)
-    out, _ = proc.communicate()
+    out, err = proc.communicate()
+    if proc.poll() != 0:
+        logging.error("Error in ls: %s", err.decode('ascii').strip() if len(err)
+                                         else out.decode('ascii').strip())
+        # return empty set
+        return set()
     return set(line.strip() for line in out.decode('ascii').splitlines())
 
 def copy_file(fname):
