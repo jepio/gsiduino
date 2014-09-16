@@ -159,7 +159,7 @@ def transfer_files(files):
             # join started threads before spawning new ones
             join_threads()
         thread = threading.Thread(target=handle_process,
-                                  args=(next(proc), deq)))
+                                  args=(proc, deq))
         thread.start()
         threads.append(thread)
     else:
