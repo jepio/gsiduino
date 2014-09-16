@@ -8,7 +8,7 @@ LIMIT = 2  # discriminating pulsewidth (fwhm) in microseconds
 def parse_time(line):
     """Parse time from lecroy data and return time to use for filename."""
     # remove first and last columns
-    line = line.split(' ',maxsplit=3)[1:-1]
+    line = line.split(' ', 3)[1:-1]
     line = " ".join(line)
     # parse time from file
     input_format = "%d-%b-%Y %H:%M:%S"
@@ -40,7 +40,7 @@ def rename(old_name):
         time_str = parse_time(next(fh))
         # next line is worthless
         next(fh)
-        data = [tuple(map(float, line.split())) for line in fh.readlines()]
+        data = [tuple(map(float, line.split())) for line in fh]
         # find max amplitude
         kind = find_kind(data)
     channel = old_name[:2]
