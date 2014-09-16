@@ -6,8 +6,7 @@ Autocopy is a python script that periodically transfers data from a local folder
 Deployment
 -----------
 
-0.  Get and install Python 3.4 from [python.org](python.org) (although any python 3 version should be ok).
-1.  Right click and run the attached powershell script `getputty.ps1` which will download the neccessary putty components.
+1.  Right click and run the attached powershell script `getstuff.ps1` which will download the neccessary putty components as well as python.
     * if this does not work *ootb* launch a powershell instance with `powershell.exe -ExecutionPolicy Unrestricted`.
     * if you can't find the files they will probably be in the current users home directory (C:\Users\User), sorry.
 2.  Launch **puttygen.exe**, generate a key pair, save the private key somehwere, copy the public key in the grey text box into your clipboard (OpenSSH public key).
