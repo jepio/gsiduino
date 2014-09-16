@@ -10,6 +10,7 @@ do
     curl -sSLO "${addr}${exec}.exe"
 done
 
+#downloading python
 python_addr="https://www.python.org/ftp/python/3.4.1/"
 python_exec="python-3.4.1"
 echo "Getting ${python_addr}${python_exec}.msi"
