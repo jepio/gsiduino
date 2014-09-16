@@ -91,13 +91,28 @@ class FileListBuilder:
         """Get processed list - chooses whether to use remote or local."""
         remote_list = check_remote()
         local_list = self.read_list()
-        if not local_list ^ remote_list:
-            logging.info("Remote and local lists are the same")
-            processed = local_list
-        else:
-            logging.info("Remote and local differ, choosing remote")
+        # if local_list is empty take remote
+        if not local_list:    
             self.save_list(remote_list, "w")
+            logging.info("Local list empty, taking remote list")
             processed = remote_list
+        # if local_list is not empty, compare to remote
+        else:
+            # if local and remote differ by more than 5 entries, ask
+            if len(local_list ^ remote_list) > 5:
+                choices = {'l':local_list, "r":remote_list}
+                choice = None
+                while choice is None:
+                    choice = input("Choose file list: l(ocal) or r(emote)")
+                    choice = choices.get(choice, None)
+                self.save_list(choice, "w")
+                logging.info("User chose list")
+                processed = choice
+            # if they don't, choose local, as the safer choice
+            else:
+                self.save_list(local_list, "w")
+                logging.info("Choosing remote list")
+                processed = local_list
         return processed
 
 
