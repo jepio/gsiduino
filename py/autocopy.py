@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE
 import pickle
 import logging
 import threading
+from pprint import pformat
 from collections import deque
 
 
@@ -189,7 +190,7 @@ def loop(processed, flb):
     # get locally available files minus the transferred ones
     files = check_local().difference(processed)
     if files:
-        logging.info("Found new files: %s" % files)
+        logging.info("Found new files:\n%s",pformat(files))
         # get rid of files that are too new
         files = set(filter(check_access, files))
         # transfer files
