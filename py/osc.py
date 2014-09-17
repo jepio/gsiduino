@@ -1,6 +1,7 @@
 """Module dealing with the renaming and proper naming of the files saved
 by the oscilloscope."""
-import glob, time, os
+import glob, time, os, logging
+
 
 LIMIT = 2  # discriminating pulsewidth (fwhm) in microseconds
 
@@ -47,9 +48,23 @@ def rename(old_name):
     new_name = "{tm}_{ch}_{tp}.{ext}".format(tm=time_str, ch=channel,
                                              tp=kind, ext="txt")
     os.rename(old_name, new_name)
+    return new_name
     
-
-file_list = glob.glob('*.txt')
-for measurement in file_list:
-    rename(measurement)
-    
+def rename_all(path):
+    logger = logging.getLogger("autocopy.osc")
+    # save start directory
+    prev = os.getcwd()
+    # go to local file directory
+    os.chdir(path)
+    # find all not-renamed files
+    old_files_list = glob.glob("*Trace*.txt")
+    for old_name in old_files_list:
+        try:
+            new_name = rename(old_name)
+            logger.info("Renamed '%s' to '%s'", old_name, new_name)
+        except Exception as e:
+            
+            logger.error("Caught exception while renaming '%s':\n%s:%s",
+                         old_name, type(e), e)
+    os.chdir(prev)
+                         
