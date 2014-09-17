@@ -49,7 +49,14 @@ def rename(old_name):
                                              tp=kind, ext="txt")
     os.rename(old_name, new_name)
     return new_name
-    
+
+def reject_new(file_list, limit=5):
+    """Filter out files modified less than 5 seconds ago."""
+    now = time.time()
+    def access_time_filter(name):
+        return abs(now - os.stat(name).st_mtime) > limit
+    return filter(access_time_filter, file_list)
+
 def rename_all(path):
     logger = logging.getLogger("autocopy.osc")
     # save start directory
@@ -58,6 +65,7 @@ def rename_all(path):
     os.chdir(path)
     # find all not-renamed files
     old_files_list = set(glob.glob("*Trace*.txt")) - FAILED
+    old_files_list = reject_new(old_files_list)
     for old_name in old_files_list:
         try:
             new_name = rename(old_name)
