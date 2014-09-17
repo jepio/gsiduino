@@ -1,4 +1,4 @@
-"""Module dealing with the renaming and proper renaming of the files saved
+"""Module dealing with the renaming and proper naming of the files saved
 by the oscilloscope."""
 import glob, time, os
 
@@ -12,23 +12,23 @@ def parse_time(line):
     line = " ".join(line)
     # parse time from file
     input_format = "%d-%b-%Y %H:%M:%S"
-    print(line)
     time_str = time.strptime(line, input_format)
-    # parse output time
     output_format = "%Y%m%d%H%M%S"
     # reformat time_str
     time_str = time.strftime(output_format, time_str)
     return time_str
 
-def find_kind(data, cutoff=LIMIT):
-    """Determine kind of measurement (extraction/injection)."""
+def find_kind(data):
+    """Determine kind of measurement (extraction/injection).
+    Uses the length of the pulse as a method of determining what it is dealing
+    with."""
     max_val = max(data, key=lambda x: x[1])[1]
     min_val = max(data, key=lambda x: x[1])[1]
     middle = (max_val-min_val)*0.5
     delta_t = data[1][0] - data[0][0]
     pulse_len = sum(1 if entry[1] > middle else 0 for entry in data)
     pulse_len *= delta_t
-    return "ext" if pulse_len>cutoff*1e-6 else "inj"
+    return "ext" if pulse_len>LIMIT*1e-6 else "inj"
 
 def rename(old_name):
     """Rename saved file to the correct format."""
@@ -41,7 +41,7 @@ def rename(old_name):
         # next line is worthless
         next(fh)
         data = [tuple(map(float, line.split())) for line in fh]
-        # find max amplitude
+        # get kind of measurement based on pulse width
         kind = find_kind(data)
     channel = old_name[:2]
     new_name = "{tm}_{ch}_{tp}.{ext}".format(tm=time_str, ch=channel,
