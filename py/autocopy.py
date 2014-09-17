@@ -68,8 +68,9 @@ def check_remote():
     if proc.poll() != 0:
         logger.error("Error in ls: %s", err.decode('ascii').strip() if len(err)
                                          else out.decode('ascii').strip())
-        # return empty set
-        return set()
+        import sys
+        print("Can't access remote location. Aborting")
+        sys.exit(1)
     return set(line.strip() for line in out.decode('ascii').splitlines())
 
 def copy_file(fname):
@@ -227,9 +228,9 @@ def main():
 
 if __name__ == "__main__":
     # set up logger instance
-    logger = logging.getLogger("autocopy")
-    logger.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+    logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
                        datefmt='%Y-%m-%d %H:%M:%S', filename=LOGFILE,
                        level=logging.INFO)
+    logger = logging.getLogger("autocopy")
     logger.info("======Start operation======")
     main()
