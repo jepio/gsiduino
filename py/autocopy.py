@@ -1,4 +1,5 @@
 """Perform a periodic backup of data. Tested with Python 3.4"""
+import glob
 import os
 import posixpath
 import time
@@ -56,7 +57,8 @@ def check_local():
     """Return a set of all files (not directories) in the path dir."""
     prev = os.getcwd()
     os.chdir(PATH_TO_DATA)
-    file_list = set(filter(os.path.isfile, os.listdir()))
+    # find all text files beginning with the current year
+    file_list = set(glob.glob("2014*.txt"))
     os.chdir(prev)
     return file_list
 
