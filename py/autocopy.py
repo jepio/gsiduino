@@ -2,12 +2,13 @@
 import os
 import posixpath
 import time
-from subprocess import Popen, PIPE
 import pickle
 import logging
 import threading
+from subprocess import Popen, PIPE
 from pprint import pformat
 from collections import deque
+import osc
 
 
 PERIOD = 5  # seconds
@@ -30,6 +31,8 @@ FILE_LIST = "file.list"
 FILE_LIST = os.path.join(os.getcwd(), FILE_LIST)
 # Path to the putty scp client
 PSCP = "pscp"
+# logger, has to be defined here, but don't modify
+logger = None
 
 
 def check_access(fname, limit=30):
@@ -40,7 +43,7 @@ def check_access(fname, limit=30):
     if last > limit:
         return True
     else:
-        logging.info("%s excluded due to last access %d s ago.", fname, last)
+        logger.info("%s excluded due to last access %d s ago.", fname, last)
         return False
 
 def check_local():
@@ -57,7 +60,7 @@ def check_remote():
                  stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     if proc.poll() != 0:
-        logging.error("Error in ls: %s", err.decode('ascii').strip() if len(err)
+        logger.error("Error in ls: %s", err.decode('ascii').strip() if len(err)
                                          else out.decode('ascii').strip())
         # return empty set
         return set()
@@ -100,7 +103,7 @@ class FileListBuilder:
         # if local_list is empty take remote
         if not local_list:    
             self.save_list(remote_list, "w")
-            logging.info("Local list empty, taking remote list")
+            logger.info("Local list empty, taking remote list")
             processed = remote_list
         # if local_list is not empty, compare to remote
         else:
@@ -112,12 +115,12 @@ class FileListBuilder:
                     choice = input("Choose file list: l(ocal) or r(emote)")
                     choice = choices.get(choice, None)
                 self.save_list(choice, "w")
-                logging.info("User chose list")
+                logger.info("User chose list")
                 processed = choice
             # if they don't, choose local, as the safer choice
             else:
                 self.save_list(local_list, "w")
-                logging.info("Choosing remote list")
+                logger.info("Choosing remote list")
                 processed = local_list
         return processed
 
@@ -129,11 +132,11 @@ def handle_process(in_tup, deq):
     if outcome is None:
         outcome = proc.wait()
     if outcome == 0:
-        logging.info("Transferred file: '%s'", fname)
+        logger.info("Transferred file: '%s'", fname)
         deq.append(fname)
     else:
-        logging.error("Error in file %s, code %d", fname, outcome)
-        logging.error("Error output: %s",
+        logger.error("Error in file %s, code %d", fname, outcome)
+        logger.error("Error output: %s",
                       proc.stderr.read().decode("ascii").strip())
 
 def transfer_files(files):
@@ -190,7 +193,7 @@ def loop(processed, flb):
     # get locally available files minus the transferred ones
     files = check_local().difference(processed)
     if files:
-        logging.info("Found new files:\n%s",pformat(files, indent=20,
+        logger.info("Found new files:\n%s",pformat(files, indent=20,
                                                     compact=True     ))
         # get rid of files that are too new
         files = set(filter(check_access, files))
@@ -203,9 +206,9 @@ def loop(processed, flb):
     time.sleep(PERIOD)
 
 def main():
-    logging.info("In directory: %s", os.getcwd())
-    logging.info("Backing up directory: %s", PATH_TO_DATA)
-    logging.info("Remote save location: %s", PATH_TO_REMOTE)
+    logger.info("In directory: %s", os.getcwd())
+    logger.info("Backing up directory: %s", PATH_TO_DATA)
+    logger.info("Remote save location: %s", PATH_TO_REMOTE)
     flb = FileListBuilder(FILE_LIST)
     processed = flb.get_processed()
     while True:
@@ -213,8 +216,10 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S', filename=LOGFILE,
-                        level=logging.INFO)
-    logging.info("======Start operation======")
+    # set up logger instance
+    logger = logging.getLogger("autocopy")
+    logger.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+                       datefmt='%Y-%m-%d %H:%M:%S', filename=LOGFILE,
+                       level=logging.INFO)
+    logger.info("======Start operation======")
     main()
