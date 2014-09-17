@@ -105,6 +105,7 @@ class FileListBuilder:
 
     def get_processed(self):
         """Get processed list - chooses whether to use remote or local."""
+        print("Getting list of processed files.")
         remote_list = check_remote()
         local_list = self.read_list()
         # if local_list is empty take remote
@@ -119,7 +120,7 @@ class FileListBuilder:
                 choices = {'l':local_list, "r":remote_list}
                 choice = None
                 while choice is None:
-                    choice = input("Choose file list: l(ocal) or r(emote)")
+                    choice = input("Choose file list: l(ocal) or r(emote): ")
                     choice = choices.get(choice, None)
                 self.save_list(choice, "w")
                 logger.info("User chose list")
@@ -197,6 +198,9 @@ def timing(func):
 @timing
 def loop(processed, flb):
     """Main application loop."""
+    if rename:
+        # rename all files that have the default filenames
+        osc.rename_all(PATH_TO_DATA)
     # get locally available files minus the transferred ones
     files = check_local().difference(processed)
     if files:
@@ -218,10 +222,8 @@ def main():
     logger.info("Remote save location: %s", PATH_TO_REMOTE)
     flb = FileListBuilder(FILE_LIST)
     processed = flb.get_processed()
+    print("Got list of processed files.")
     while True:
-        if rename:
-            # rename all with default filenames
-            osc.rename_all(PATH_TO_DATA)
         # run program loop
         loop(processed, flb)
 
@@ -233,4 +235,5 @@ if __name__ == "__main__":
                        level=logging.INFO)
     logger = logging.getLogger("autocopy")
     logger.info("======Start operation======")
+    print("Starting.")
     main()
