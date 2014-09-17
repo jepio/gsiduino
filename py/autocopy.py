@@ -16,6 +16,7 @@ import osc
 #    Settings    #
 ##################
 PERIOD = 5  # seconds
+THREAD_LIMIT = 2  # limit concurrently copied files
 # Remote host
 HOST = ""  # get your own
 # Remote folder
@@ -50,7 +51,7 @@ def check_access(fname, limit=30):
     if last > limit:
         return True
     else:
-        logger.info("%s excluded due to last access %d s ago.", fname, last)
+        logger.info("'%s' excluded, last access %d s ago.", fname, last)
         return False
 
 def check_local():
@@ -130,7 +131,7 @@ class FileListBuilder:
             # if they don't, choose local, as the safer choice
             else:
                 self.save_list(local_list, "w")
-                logger.info("Choosing remote list")
+                logger.info("Choosing local list")
                 processed = local_list
         return processed
 
@@ -145,7 +146,7 @@ def handle_process(in_tup, deq):
         logger.info("Transferred file: '%s'", fname)
         deq.append(fname)
     else:
-        logger.error("Error in file %s, code %d", fname, outcome)
+        logger.error("Error in file '%s', code %d", fname, outcome)
         logger.error("Error output: %s",
                       proc.stderr.read().decode("ascii").strip())
 
@@ -156,7 +157,7 @@ def transfer_files(files):
     processes = (copy_file(file_) for file_ in files)
     # deque for gathering data from threads
     deq = deque()
-    THREAD_LIMIT = 5
+    
     # threaded version
     threads = []
     def join_threads():
