@@ -11,6 +11,9 @@ from collections import deque
 import osc
 
 
+##################
+#    Settings    #
+##################
 PERIOD = 5  # seconds
 # Remote host
 HOST = ""  # get your own
@@ -35,6 +38,7 @@ PSCP = "pscp"
 logger = None
 # leave this setting for spectrum analyzers, change to True for oscilloscope
 rename = False
+##################
 
 
 def check_access(fname, limit=30):
