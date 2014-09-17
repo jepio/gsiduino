@@ -33,6 +33,8 @@ FILE_LIST = os.path.join(os.getcwd(), FILE_LIST)
 PSCP = "pscp"
 # logger, has to be defined here, but don't modify
 logger = None
+# leave this setting for spectrum analyzers, change to True for oscilloscope
+rename = False
 
 
 def check_access(fname, limit=30):
@@ -212,6 +214,10 @@ def main():
     flb = FileListBuilder(FILE_LIST)
     processed = flb.get_processed()
     while True:
+        if rename:
+            # rename all with default filenames
+            osc.rename_all(PATH_TO_DATA)
+        # run program loop
         loop(processed, flb)
 
 
