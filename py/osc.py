@@ -4,7 +4,7 @@ import glob, time, os, logging
 
 
 LIMIT = 2  # discriminating pulsewidth (fwhm) in microseconds
-
+FAILED = set()
 
 def parse_time(line):
     """Parse time from lecroy data and return time to use for filename."""
@@ -57,13 +57,13 @@ def rename_all(path):
     # go to local file directory
     os.chdir(path)
     # find all not-renamed files
-    old_files_list = glob.glob("*Trace*.txt")
+    old_files_list = set(glob.glob("*Trace*.txt")) - FAILED
     for old_name in old_files_list:
         try:
             new_name = rename(old_name)
             logger.info("Renamed '%s' to '%s'", old_name, new_name)
         except Exception as e:
-            
+            FAILED.add(old_name)      
             logger.error("Caught exception while renaming '%s':\n%s:%s",
                          old_name, type(e), e)
     os.chdir(prev)
