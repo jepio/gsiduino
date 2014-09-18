@@ -9,12 +9,11 @@ FAILED = set()
 def parse_time(line):
     """Parse time from lecroy data and return time to use for filename."""
     # remove first and last columns
-    line = line.split(' ', 3)[1:-1]
-    line = " ".join(line)
+    line = line.split(',')[1]
     # parse time from file
     input_format = "%d-%b-%Y %H:%M:%S"
     time_str = time.strptime(line, input_format)
-    output_format = "%Y%m%d%H%M%S"
+    output_format = "%Y.%m.%d.%H.%M.%S"
     # reformat time_str
     time_str = time.strftime(output_format, time_str)
     return time_str
@@ -45,8 +44,8 @@ def rename(old_name):
         # get kind of measurement based on pulse width
         kind = find_kind(data)
     channel = old_name[:2]
-    new_name = "{tm}_{ch}_{tp}.{ext}".format(tm=time_str, ch=channel,
-                                             tp=kind, ext="txt")
+    new_name = "{ch}_{tp}_{tm}.{ext}".format(tm=time_str, ch=channel,
+                                             tp=kind, ext="csv")
     os.rename(old_name, new_name)
     return new_name
 
@@ -64,7 +63,7 @@ def rename_all(path):
     # go to local file directory
     os.chdir(path)
     # find all not-renamed files
-    old_files_list = set(glob.glob("*Trace*.txt")) - FAILED
+    old_files_list = set(glob.glob("*Trace*.csv")) - FAILED
     old_files_list = reject_new(old_files_list)
     for old_name in old_files_list:
         try:

@@ -59,7 +59,7 @@ def check_local():
     prev = os.getcwd()
     os.chdir(PATH_TO_DATA)
     # find all text files beginning with the current year
-    file_list = set(glob.glob("2014*.txt"))
+    file_list = set(glob.glob("C*2014*.csv"))
     os.chdir(prev)
     return file_list
 
