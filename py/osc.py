@@ -40,7 +40,7 @@ def rename(old_name):
         time_str = parse_time(next(fh))
         # next line is worthless
         next(fh)
-        data = [tuple(map(float, line.split())) for line in fh]
+        data = [tuple(map(float, line.split(','))) for line in fh]
         # get kind of measurement based on pulse width
         kind = find_kind(data)
     channel = old_name[:2]
