@@ -3,7 +3,7 @@ by the oscilloscope."""
 import glob, time, os, logging
 
 
-LIMIT = 2  # discriminating pulsewidth (fwhm) in microseconds
+LIMIT = 1  # discriminating pulsewidth (fwhm) in microseconds
 FAILED = set()
 
 def parse_time(line):
@@ -23,24 +23,28 @@ def find_kind(data):
     Uses the length of the pulse as a method of determining what it is dealing
     with."""
     max_val = max(data, key=lambda x: x[1])[1]
-    min_val = max(data, key=lambda x: x[1])[1]
-    middle = (max_val-min_val)*0.5
+    min_val = min(data, key=lambda x: x[1])[1]
+    middle = (max_val+min_val)*0.5
     delta_t = data[1][0] - data[0][0]
     pulse_len = sum(1 if entry[1] > middle else 0 for entry in data)
     pulse_len *= delta_t
     return "ext" if pulse_len>LIMIT*1e-6 else "inj"
 
+def read_data_and_time(file_):
+    # skip first 3 lines
+    for i in range(3):
+        next(file_)
+    # next line has time
+    time_str = parse_time(next(file_))
+    # next line is worthless
+    next(file_)
+    data = [tuple(map(float, line.split(','))) for line in file_]
+    return data, time_str
+
 def rename(old_name):
     """Rename saved file to the correct format."""
     with open(old_name) as fh:
-        # skip first 3 lines
-        for i in range(3):
-            next(fh)
-        # next line has time
-        time_str = parse_time(next(fh))
-        # next line is worthless
-        next(fh)
-        data = [tuple(map(float, line.split(','))) for line in fh]
+        data, time_str = read_data_and_time(fh)
         # get kind of measurement based on pulse width
         kind = find_kind(data)
     channel = old_name[:2]
@@ -74,4 +78,3 @@ def rename_all(path):
             logger.error("Caught exception while renaming '%s':\n%s:%s",
                          old_name, type(e), e)
     os.chdir(prev)
-                         
