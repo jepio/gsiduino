@@ -5,6 +5,8 @@ import glob, time, os, logging
 
 LIMIT = 1  # discriminating pulsewidth (fwhm) in microseconds
 FAILED = set()
+# the channel that will be used to decide whether this was an injection or an extractions
+REF_CH = "C3" 
 
 def parse_time(line):
     """Parse time from lecroy data and return time to use for filename."""
@@ -41,17 +43,30 @@ def read_data_and_time(file_):
     data = [tuple(map(float, line.split(','))) for line in file_]
     return data, time_str
 
+def name_file(old_name, kind, time_str):
+    """Rename a file using the function arguments."""
+    logger = logging.getLogger("autocopy.osc")
+    try:
+        extension = "csv"
+        channel = old_name[:2]
+        new_name = "{ch}_{tp}_{tm}.{ext}".format(tm=time_str, ch=channel,
+                                                 tp=kind, ext=extension)
+        os.rename(old_name, new_name)
+        logger.info("Renamed '%s' to '%s'", old_name, new_name)
+    except Exception as e:
+            FAILED.add(old_name)      
+            logger.error("Caught exception while renaming '%s':\n%s:%s",
+                         old_name, type(e), e)
+    return new_name
+
 def rename(old_name):
-    """Rename saved file to the correct format."""
+    """Find the new name of a file and rename it to the correct format."""
     with open(old_name) as fh:
         data, time_str = read_data_and_time(fh)
         # get kind of measurement based on pulse width
         kind = find_kind(data)
-    channel = old_name[:2]
-    new_name = "{ch}_{tp}_{tm}.{ext}".format(tm=time_str, ch=channel,
-                                             tp=kind, ext="csv")
-    os.rename(old_name, new_name)
-    return new_name
+    new_name = name_file(old_name, kind, time_str)
+    return new_name, kind, time_str
 
 def reject_new(file_list, limit=5):
     """Filter out files modified less than 5 seconds ago."""
@@ -61,20 +76,19 @@ def reject_new(file_list, limit=5):
     return filter(access_time_filter, file_list)
 
 def rename_all(path):
-    logger = logging.getLogger("autocopy.osc")
+
     # save start directory
     prev = os.getcwd()
     # go to local file directory
     os.chdir(path)
-    # find all not-renamed files
-    old_files_list = set(glob.glob("*Trace*.csv")) - FAILED
+    # find all not-renamed files in the reference channel
+    old_files_list = set(glob.glob("*{}Trace*.csv".format(REF_CH))) - FAILED
     old_files_list = reject_new(old_files_list)
     for old_name in old_files_list:
-        try:
-            new_name = rename(old_name)
-            logger.info("Renamed '%s' to '%s'", old_name, new_name)
-        except Exception as e:
-            FAILED.add(old_name)      
-            logger.error("Caught exception while renaming '%s':\n%s:%s",
-                         old_name, type(e), e)
+            # rename the reference channel file to find kind of event and time
+            new_name, kind, time_str = rename(old_name)
+            # find the remaining channels of this data set
+            other_channels = glob.glob("*" + old_name[2:])
+            for old_name in other_channels:
+                name_file(old_name, kind, time_str)
     os.chdir(prev)
