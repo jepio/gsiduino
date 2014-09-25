@@ -36,6 +36,9 @@ FILE_LIST = "file.list"
 FILE_LIST = os.path.join(os.getcwd(), FILE_LIST)
 # Path to the putty scp client
 PSCP = "pscp"
+# The glob string used to search for files - I recommend this one for the oscilloscope,
+# for the S/A's you can use the basename, possibly with the file extension
+GLOBSTR = "*_2014*.csv"
 # logger, has to be defined here, but don't modify
 logger = None
 # leave this setting for spectrum analyzers, change to True for oscilloscope
@@ -59,7 +62,7 @@ def check_local():
     prev = os.getcwd()
     os.chdir(PATH_TO_DATA)
     # find all text files beginning with the current year
-    file_list = set(glob.glob("C*2014*.csv"))
+    file_list = set(glob.glob("{base}".format(base=GLOBSTR)))
     os.chdir(prev)
     return file_list
 
