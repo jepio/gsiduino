@@ -13,7 +13,7 @@ import cPickle as pickle
 # Settings #
 ############
 # data
-DATA_DIR = "/hera/sids/oscillations"
+DATA_DIR = "/hera/sids/oscillation_test/autocopy_tests"
 RSA51 = os.path.join(DATA_DIR, "rsa51")
 RSA52 = os.path.join(DATA_DIR, "rsa52")
 RSA30 = os.path.join(DATA_DIR, "rsa30")
