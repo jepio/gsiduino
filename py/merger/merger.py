@@ -152,8 +152,12 @@ def get_rsa30_files(predicate):
     return found_files
 
 
-def merge(start, data):
-    outfile = "{out}/{name}".format(out=OUTPUT_DIR, name=time.mktime(start))
+def merge(start, data, debug=False):
+    if not debug:
+        outfile = "{out}/{name}".format(out=OUTPUT_DIR, name=time.mktime(start))
+    else:
+        outfile = "{out}/ERROR{name}".format(out=OUTPUT_DIR, name=time.mktime(start))
+
     with open(outfile, "w") as file_:
         file_.write("\n".join(data))
         file_.write("\n")
@@ -215,6 +219,7 @@ def loop(processed):
         data2merge += get_rsa50_files(predicate)
         data2merge += get_rsa30_files(predicate)
         if len(data2merge) != 11:
+            merge(start,data2merge, True)
             logging.error("Injection@%s could not be merged",
                           time.strftime("%m.%d.%H.%M.%S", start))
         else:
