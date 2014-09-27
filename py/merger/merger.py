@@ -82,7 +82,10 @@ def get_injections(processed):
     file_list.sort(key=lambda x: time.mktime(x))
 
     # creates tuples of 2 subsequent injection times
-    intervals = zip(file_list[:-1], file_list[1:])
+    if len(file_list) < 2:
+        intervals = []
+    else:
+        intervals = zip(file_list[:-1], file_list[1:])
 
     os.chdir(previous)
     return intervals
@@ -114,10 +117,15 @@ def get_inj_files(start):
             tm=time.strftime(TimeExtractor.osc_time, start))
         found_files = glob.glob(glob_str)
         data.extend(found_files)
+    if len(data) != 4:
+        logging.error("Injection@%s: found %d osc inj files",
+                      time.strftime("%m.%d.%H.%M.%S",start),
+                      len(data))
+        data = []
     return data
 
 
-def get_ext_files(predicate):
+def get_ext_files(start, predicate):
     """Retrieve oscilloscope extraction files"""
     data = []
     for channel in OSC_CHANS:
@@ -125,30 +133,45 @@ def get_ext_files(predicate):
         found_files = [f for f in glob.glob(glob_str)
                        if predicate(TimeExtractor.osc(f))]
         data.extend(found_files)
+    if len(data) != 4:
+        logging.error("Injection@%s: found %d osc ext files",
+                      time.strftime("%m.%d.%H.%M.%S",start),
+                      len(data))
+        data = []
     return data
 
 
 def get_osc_files(start, predicate):
     """Retrieve oscilloscope files."""
     data = get_inj_files(start)
-    data += get_ext_files(predicate)
+    data += get_ext_files(start, predicate)
     return data
 
 
-def get_rsa50_files(predicate):
+def get_rsa50_files(start, predicate):
     data = []
     for rsa in (RSA51, RSA52):
         glob_str = "{rsa}/*.TIQ".format(rsa=rsa)
         found_files = [f for f in glob.glob(glob_str)
                        if predicate(TimeExtractor.rsa50(f))]
         data += found_files
+    if len(data) != 2:
+        logging.error("Injection@%s: found %d rsa50 files",
+                      time.strftime("%m.%d.%H.%M.%S",start),
+                      len(data))
+        data = []
     return data
 
 
-def get_rsa30_files(predicate):
+def get_rsa30_files(start, predicate):
     glob_str = "{rsa}/*.iqt".format(rsa=RSA30)
     found_files = [f for f in glob.glob(glob_str)
                    if predicate(TimeExtractor.rsa30(f))]
+    if len(found_files) != 1:
+        logging.error("Injection@%s: found %d rsa30 files",
+                      time.strftime("%m.%d.%H.%M.%S",start),
+                      len(found_files))
+        found_files = []
     return found_files
 
 
@@ -216,18 +239,22 @@ def loop(processed):
         predicate = create_range_predicate(start, stop)
         data2merge = []
         data2merge += get_osc_files(start, predicate)
-        data2merge += get_rsa50_files(predicate)
-        data2merge += get_rsa30_files(predicate)
+        data2merge += get_rsa50_files(start, predicate)
+        data2merge += get_rsa30_files(start, predicate)
         if len(data2merge) != 11:
-            merge(start,data2merge, True)
+            if time.mktime(stop) - time.mktime(start) > 1.5*60:
+                logging.error("Injection@%s had next inj after "
+                              "%d seconds",
+                              time.strftime("%m.%d.%H.%M.%S",start),
+                              time.mktime(stop) - time.mktime(start))
             logging.error("Injection@%s could not be merged",
                           time.strftime("%m.%d.%H.%M.%S", start))
         else:
             merge(start, data2merge)
-            processed.add(start)
             logging.info("Successfully merged injection@%s",
                          time.strftime("%m.%d.%H.%M.%S", start))
-            save_processed("processed.list", set([start]))
+        processed.add(start)
+        save_processed("processed.list", set([start]))
     logging.info("Finished loop")
 
 
