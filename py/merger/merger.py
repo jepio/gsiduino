@@ -83,10 +83,9 @@ def get_injections(processed):
     file_list.sort(key=lambda x: time.mktime(x))
 
     # creates tuples of 2 subsequent injection times
-    if len(file_list) < 2:
-        intervals = []
-    else:
-        intervals = zip(file_list[:-1], file_list[1:])
+    # this is safe even in the case of only 1 entry in file_list:
+    # slices will simply be empty - brilliant.
+    intervals = zip(file_list[:-1], file_list[1:])
 
     os.chdir(previous)
     return intervals
