@@ -1,3 +1,4 @@
+# vim: ai:si:number:ts=4:et:sw=4:st=4
 """
 A performing the merging of files during the experiment.
 """
