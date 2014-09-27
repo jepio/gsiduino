@@ -8,6 +8,7 @@ import logging
 import time
 import glob
 import cPickle as pickle
+from subprocess import Popen, PIPE
 
 ############
 # Settings #
@@ -21,7 +22,7 @@ OSC_DIR = os.path.join(DATA_DIR, "osc")
 OSC_CHANS = ("C1", "C2", "C3", "C4")
 REF_CHAN = os.path.join(OSC_DIR, "C2")
 # path to time2root
-T2R = "time2root"
+T2R = "/hera/sids/visual_analysis/time2root/time2root"
 OUTPUT_DIR = os.path.join(DATA_DIR, "root")
 LOGFILE = os.path.join(DATA_DIR, "merging.log")
 PERIOD = 30  # seconds
@@ -176,14 +177,22 @@ def get_rsa30_files(start, predicate):
 
 
 def merge(start, data, debug=False):
-    if not debug:
-        outfile = "{out}/{name}".format(out=OUTPUT_DIR, name=time.mktime(start))
-    else:
-        outfile = "{out}/ERROR{name}".format(out=OUTPUT_DIR, name=time.mktime(start))
+    """
+    Merge the gathered files using time2root.
+    """
+    DEVNULL = open(os.devnull, 'wb')
+    output_filename = time.strftime(TimeExtractor.osc_time, start) + ".root"
+    output_path =  os.path.join(OUTPUT_DIR, output_filename)
 
-    with open(outfile, "w") as file_:
-        file_.write("\n".join(data))
-        file_.write("\n")
+    for file_ in data:
+        proc = Popen([T2R, output_path, file_], stdout=DEVNULL,stderr=None)
+        out = proc.wait()
+        if out != 0:
+            logging.error("Injection@%s: T2R failed at %s with code %d",
+                          time.strftime("%m.%d.%H.%M.%S",start),
+                          file_.split('/')[-1],
+                          out)
+    DEVNULL.close()
 
 
 def save_processed(filename, processed):
