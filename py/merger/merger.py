@@ -203,7 +203,7 @@ def save_processed(filename, processed):
         processed (set): the collection which will be appended to file.
     """
     with open(filename, "ab") as file_:
-        pickle.dump(processed, file_, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(processed, file_, 0)
 
 
 def get_processed(filename):
@@ -266,6 +266,12 @@ def loop(processed):
     logging.info("Finished loop")
 
 
+def backup_list():
+    """Backup the list of processed injections to a different directory"""
+    import shutil
+    shutil.copy("processed.list","/hera/sids/")
+
+
 def main():
     """
     The main function of the application. It consists of an application
@@ -276,6 +282,7 @@ def main():
     processed = get_processed("processed.list")
     while True:
         loop(processed)
+        backup_list()
         time.sleep(PERIOD)
         print "Ping", i
         i += 1
