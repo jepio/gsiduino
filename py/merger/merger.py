@@ -48,7 +48,7 @@ class TimeExtractor(object):
     def rsa50(cls, name):
         """Extract time from RSA50 TIQ files."""
         name = name.split('/')[-1]
-        name = name.split('-')[1:]
+        name = name.split('-')[1]
         return time.strptime(name, cls.rsa50_time)
 
     @classmethod
@@ -79,6 +79,7 @@ def get_injections(processed):
     file_list = file_list[:-1]
     file_list = [TimeExtractor.osc(f) for f in file_list]
     file_list = [f for f in file_list if f not in processed]
+    file_list.sort(key=lambda x: time.mktime(x))
 
     # creates tuples of 2 subsequent injection times
     intervals = zip(file_list[:-1], file_list[1:])
@@ -99,7 +100,7 @@ def create_range_predicate(start, stop, tolerance=0):
 
     def predicate(data_time):
         data_time = time.mktime(data_time)
-        return start - tolerance <= data_time <= stop + tolerance
+        return start - tolerance < data_time < stop + tolerance
 
     return predicate
 
@@ -108,7 +109,7 @@ def get_inj_files(start):
     """Retrieve oscilloscope injection files"""
     data = []
     for channel in OSC_CHANS:
-        glob_str = "{osc}/{ch}/{ch}_{tm}_inj.csv".format(
+        glob_str = "{osc}/{ch}/{ch}_{tm}_*.csv".format(
             osc=OSC_DIR, ch=channel,
             tm=time.strftime(TimeExtractor.osc_time, start))
         found_files = glob.glob(glob_str)
@@ -120,7 +121,7 @@ def get_ext_files(predicate):
     """Retrieve oscilloscope extraction files"""
     data = []
     for channel in OSC_CHANS:
-        glob_str = "{osc}/{ch}/{ch}_*_ext.csv".format(osc=OSC_DIR, ch=channel)
+        glob_str = "{osc}/{ch}/{ch}_*.csv".format(osc=OSC_DIR, ch=channel)
         found_files = [f for f in glob.glob(glob_str)
                        if predicate(TimeExtractor.osc(f))]
         data.extend(found_files)
