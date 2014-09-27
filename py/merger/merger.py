@@ -157,6 +157,41 @@ def merge(start, data):
         file_.write("\n")
 
 
+def save_processed(filename, processed):
+    """
+    Pickle a data collection (set) and append it to a file.
+
+    Args:
+        filename (str): the name of the file to which to write.
+        processed (set): the collection which will be appended to file.
+    """
+    with open(filename, "ab") as file_:
+        pickle.dump(processed, file_, pickle.HIGHEST_PROTOCOL)
+
+
+def get_processed(filename):
+    """
+    Unpickle all sets contained within a file.
+
+    Arg:
+        filename (str): the name of the file from which to read.
+
+    Returns:
+        A union of all sets contained within the file.
+    """
+    processed = set()
+    try:
+        with open(filename, "rb") as processed_file:
+            while True:
+                processed.update(pickle.load(processed_file))
+    except EOFError:
+        pass
+    except IOError:
+        # if file doesn't exist will create a file with an empty set.
+        save_processed(filename, processed)
+    return processed
+
+
 def loop(processed):
     """
     The program loop, made up of the following steps:
@@ -199,41 +234,6 @@ def main():
     while True:
         time.sleep(PERIOD)
         loop(processed)
-
-
-def save_processed(filename, processed):
-    """
-    Pickle a data collection (set) and append it to a file.
-
-    Args:
-        filename (str): the name of the file to which to write.
-        processed (set): the collection which will be appended to file.
-    """
-    with open(filename, "ab") as file_:
-        pickle.dump(processed, file_, pickle.HIGHEST_PROTOCOL)
-
-
-def get_processed(filename):
-    """
-    Unpickle all sets contained within a file.
-
-    Arg:
-        filename (str): the name of the file from which to read.
-
-    Returns:
-        A union of all sets contained within the file.
-    """
-    processed = set()
-    try:
-        with open(filename, "rb") as processed_file:
-            while True:
-                processed.update(pickle.load(processed_file))
-    except EOFError:
-        pass
-    except IOError:
-        # if file doesn't exist will create a file with an empty set.
-        save_processed(filename, processed)
-    return processed
 
 
 def config_logging():
