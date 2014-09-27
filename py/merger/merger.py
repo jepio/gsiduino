@@ -231,12 +231,14 @@ def main():
     The main function of the application. It consists of an application
     loop and sleeping till the end of time.
     """
+    i = 0
     os.chdir(DATA_DIR)
     processed = get_processed("processed.list")
     while True:
-        time.sleep(PERIOD)
         loop(processed)
-
+        time.sleep(PERIOD)
+        print "Ping", i
+        i += 1
 
 def config_logging():
     """Set the parameters for the logfile."""
