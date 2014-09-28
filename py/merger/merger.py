@@ -9,7 +9,8 @@ import time
 import glob
 import cPickle as pickle
 import shutil
-from subprocess import Popen, PIPE
+from subprocess import Popen
+from functools import wraps
 
 ############
 # Settings #
@@ -109,6 +110,27 @@ def create_range_predicate(start, stop, tolerance=0):
     return predicate
 
 
+def check_output(n, message):
+    """
+    Decorator: check output of function, if function returns list of
+    length n everything is alright, else use message to construct an
+    error message.
+    """
+    def decorator(func):
+        @wraps(func)
+        def decorated(start, *args):
+            data = func(start, *args)
+            if len(data) != n:
+                logging.error("Injection@%s: found %d %s files",
+                              time.strftime("%m.%d.%H.%M.%S", start),
+                              len(data), message)
+                data = []
+            return data
+        return decorated
+    return decorator
+
+
+@check_output(4, "osc inj")
 def get_inj_files(start):
     """Retrieve oscilloscope injection files"""
     data = []
@@ -118,14 +140,10 @@ def get_inj_files(start):
             tm=time.strftime(TimeExtractor.osc_time, start))
         found_files = glob.glob(glob_str)
         data.extend(found_files)
-    if len(data) != 4:
-        logging.error("Injection@%s: found %d osc inj files",
-                      time.strftime("%m.%d.%H.%M.%S",start),
-                      len(data))
-        data = []
     return data
 
 
+@check_output(4, "osc ext")
 def get_ext_files(start, predicate):
     """Retrieve oscilloscope extraction files"""
     data = []
@@ -134,11 +152,6 @@ def get_ext_files(start, predicate):
         found_files = [f for f in glob.glob(glob_str)
                        if predicate(TimeExtractor.osc(f))]
         data.extend(found_files)
-    if len(data) != 4:
-        logging.error("Injection@%s: found %d osc ext files",
-                      time.strftime("%m.%d.%H.%M.%S",start),
-                      len(data))
-        data = []
     return data
 
 
@@ -149,6 +162,7 @@ def get_osc_files(start, predicate):
     return data
 
 
+@check_output(2, "rsa50")
 def get_rsa50_files(start, predicate):
     data = []
     for rsa in (RSA51, RSA52):
@@ -156,23 +170,14 @@ def get_rsa50_files(start, predicate):
         found_files = [f for f in glob.glob(glob_str)
                        if predicate(TimeExtractor.rsa50(f))]
         data += found_files
-    if len(data) != 2:
-        logging.error("Injection@%s: found %d rsa50 files",
-                      time.strftime("%m.%d.%H.%M.%S",start),
-                      len(data))
-        data = []
     return data
 
 
+@check_output(1, "rsa30")
 def get_rsa30_files(start, predicate):
     glob_str = "{rsa}/*.iqt".format(rsa=RSA30)
     found_files = [f for f in glob.glob(glob_str)
                    if predicate(TimeExtractor.rsa30(f))]
-    if len(found_files) != 1:
-        logging.error("Injection@%s: found %d rsa30 files",
-                      time.strftime("%m.%d.%H.%M.%S",start),
-                      len(found_files))
-        found_files = []
     return found_files
 
 
