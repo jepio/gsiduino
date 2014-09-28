@@ -8,6 +8,7 @@ import logging
 import time
 import glob
 import cPickle as pickle
+import shutil
 from subprocess import Popen, PIPE
 
 ############
@@ -268,7 +269,6 @@ def loop(processed):
 
 def backup_list():
     """Backup the list of processed injections to a different directory"""
-    import shutil
     shutil.copy("processed.list","/hera/sids/")
 
 
