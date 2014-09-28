@@ -77,20 +77,19 @@ def get_injections(processed):
     previous = os.getcwd()
     os.chdir(REF_CHAN)
 
-    file_list = glob.glob("C2*inj.csv")
+    files_list = glob.glob("C2*inj.csv")
     # possibly the S/A files have not been transferred yet, remove last
-    file_list = file_list[:-1]
-    file_list = [TimeExtractor.osc(f) for f in file_list]
-    file_list = [f for f in file_list if f not in processed]
-    file_list.sort(key=lambda x: time.mktime(x))
+    all_times_list = [TimeExtractor.osc(f) for f in files_list[:-1]]
+    times_list = [f for f in all_times_list if f not in processed]
+    times_list.sort(key=lambda x: time.mktime(x))
 
     # creates tuples of 2 subsequent injection times
     # this is safe even in the case of only 1 entry in file_list:
     # slices will simply be empty - brilliant.
-    intervals = zip(file_list[:-1], file_list[1:])
+    interval_tuples = zip(times_list[:-1], times_list[1:])
 
     os.chdir(previous)
-    return intervals
+    return interval_tuples
 
 
 def create_range_predicate(start, stop, tolerance=0):
