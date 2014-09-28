@@ -187,14 +187,14 @@ def merge(start, data, debug=False):
     """
     DEVNULL = open(os.devnull, 'wb')
     output_filename = time.strftime(TimeExtractor.osc_time, start) + ".root"
-    output_path =  os.path.join(OUTPUT_DIR, output_filename)
+    output_path = os.path.join(OUTPUT_DIR, output_filename)
 
     for file_ in data:
-        proc = Popen([T2R, output_path, file_], stdout=DEVNULL,stderr=None)
+        proc = Popen([T2R, output_path, file_], stdout=DEVNULL, stderr=None)
         out = proc.wait()
         if out != 0:
             logging.error("Injection@%s: T2R failed at %s with code %d",
-                          time.strftime("%m.%d.%H.%M.%S",start),
+                          time.strftime("%m.%d.%H.%M.%S", start),
                           file_.split('/')[-1],
                           out)
     DEVNULL.close()
@@ -256,10 +256,10 @@ def loop(processed):
         data2merge += get_rsa50_files(start, predicate)
         data2merge += get_rsa30_files(start, predicate)
         if len(data2merge) != 11:
-            if time.mktime(stop) - time.mktime(start) > 1.5*60:
+            if time.mktime(stop) - time.mktime(start) > 1.5 * 60:
                 logging.error("Injection@%s had next inj after "
                               "%d seconds",
-                              time.strftime("%m.%d.%H.%M.%S",start),
+                              time.strftime("%m.%d.%H.%M.%S", start),
                               time.mktime(stop) - time.mktime(start))
             logging.error("Injection@%s could not be merged",
                           time.strftime("%m.%d.%H.%M.%S", start))
@@ -274,7 +274,7 @@ def loop(processed):
 
 def backup_list():
     """Backup the list of processed injections to a different directory"""
-    shutil.copy("processed.list","/hera/sids/")
+    shutil.copy("processed.list", "/hera/sids/")
 
 
 def main():
@@ -291,6 +291,7 @@ def main():
         time.sleep(PERIOD)
         print "Ping", i
         i += 1
+
 
 def config_logging():
     """Set the parameters for the logfile."""
