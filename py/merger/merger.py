@@ -62,6 +62,18 @@ class TimeExtractor(object):
         return time.strptime(name, cls.osc_time)
 
 
+def dir_restore(func):
+    """Changes back to start directory, regardless of what
+    a function does inside it."""
+    @wraps(func)
+    def decorator(*ar, **kw):
+        previous = os.getcwd()
+        result = func(*ar, **kw)
+        os.chdir(previous)
+        return result
+    return decorator
+
+@dir_restore
 def get_injections(processed):
     """
     Find and return new injections. Injections are classified according to
@@ -74,7 +86,6 @@ def get_injections(processed):
         A list of tuples, where each tuple contains the starting time of the
         injection and the starting time of the next injection.
     """
-    previous = os.getcwd()
     os.chdir(REF_CHAN)
 
     files_list = glob.glob("C2*inj.csv")
@@ -88,7 +99,6 @@ def get_injections(processed):
     # slices will simply be empty - brilliant.
     interval_tuples = zip(times_list[:-1], times_list[1:])
 
-    os.chdir(previous)
     return interval_tuples
 
 
@@ -179,14 +189,19 @@ def get_rsa30_files(start, predicate):
                    if predicate(TimeExtractor.rsa30(f))]
     return found_files
 
-
+@dir_restore
 def merge(start, data, debug=False):
     """
     Merge the gathered files using time2root.
     """
     DEVNULL = open(os.devnull, 'wb')
     output_filename = time.strftime(TimeExtractor.osc_time, start) + ".root"
+    # get absolute path to output files
     output_path = os.path.join(OUTPUT_DIR, output_filename)
+    # get absolute path to input files
+    data = (os.path.abspath(file_) for file_ in data)
+    # change directory to time2root dir
+    os.chdir(os.path.basename(T2R))
 
     for file_ in data:
         proc = Popen([T2R, output_path, file_], stdout=DEVNULL, stderr=None)
