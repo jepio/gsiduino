@@ -202,7 +202,7 @@ def merge(start, data, debug=False):
     # get absolute path to input files
     data = (os.path.abspath(file_) for file_ in data)
     # change directory to time2root dir
-    os.chdir(os.path.basename(T2R))
+    os.chdir(os.path.dirname(T2R))
 
     for file_ in data:
         proc = Popen([T2R, output_path, file_], stdout=DEVNULL, stderr=None)
