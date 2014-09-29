@@ -88,11 +88,12 @@ def get_injections(processed):
     """
     os.chdir(REF_CHAN)
 
-    files_list = glob.glob("C2*inj.csv")
-    # possibly the S/A files have not been transferred yet, remove last
-    all_times_list = [TimeExtractor.osc(f) for f in files_list[:-1]]
+    files_list = glob.iglob("C2*inj.csv")
+    all_times_list = (TimeExtractor.osc(f) for f in files_list)
     times_list = [f for f in all_times_list if f not in processed]
     times_list.sort(key=lambda x: time.mktime(x))
+    # in case S/A file have not been copied, dont merge last injection.
+    times_list = times_list[:-1]
 
     # creates tuples of 2 subsequent injection times
     # this is safe even in the case of only 1 entry in file_list:
