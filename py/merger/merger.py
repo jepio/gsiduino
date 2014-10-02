@@ -204,15 +204,17 @@ def merge(start, data, debug=False):
     data = (os.path.abspath(file_) for file_ in data)
     # change directory to time2root dir
     os.chdir(os.path.dirname(T2R))
-
     for file_ in data:
-        proc = Popen([T2R, output_path, file_], stdout=DEVNULL, stderr=None)
+        proc = Popen([T2R, output_path, file_], stdout=PIPE, stderr=PIPE)
+        output, err = proc.communicate()
         out = proc.wait()
         if out != 0:
+            ## Temporary fix to see if this helps
             logging.error("Injection@%s: T2R failed at %s with code %d",
                           time.strftime("%m.%d.%H.%M.%S", start),
                           file_.split('/')[-1],
                           out)
+            logging.error("Error message and output: %s %s", output, err)
     DEVNULL.close()
 
 
@@ -244,6 +246,7 @@ def get_processed(filename):
             while True:
                 processed.update(pickle.load(processed_file))
     except EOFError:
+        # expected
         pass
     except IOError:
         # if file doesn't exist will create a file with an empty set.
@@ -302,8 +305,11 @@ def main():
     os.chdir(DATA_DIR)
     processed = get_processed(PROCESS)
     while True:
-        loop(processed)
-        backup_list()
+        try:
+            loop(processed)
+            backup_list()
+        except Exception as exc:
+            logging.exception("Something aweful happened!")
         time.sleep(PERIOD)
         print "Ping", i
         i += 1
