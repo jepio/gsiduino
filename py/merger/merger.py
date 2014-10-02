@@ -9,6 +9,7 @@ import time
 import glob
 import cPickle as pickle
 import shutil
+from pprint import pformat
 from subprocess import Popen, PIPE
 from functools import wraps
 
@@ -28,6 +29,7 @@ T2R = "/data.local2/time2root/time2root"
 OUTPUT_DIR = os.path.join(DATA_DIR, "ROOT")
 LOGFILE = os.path.join(DATA_DIR, "Merger", "merging.log")
 PROCESS = os.path.join(DATA_DIR, "Merger", "processed.list")
+CONTENT = os.path.join(DATA_DIR, "Merger", "content.list")
 PERIOD = 30  # seconds
 
 
@@ -191,12 +193,35 @@ def get_rsa30_files(start, predicate):
                    if predicate(TimeExtractor.rsa30(f))]
     return found_files
 
+
+def log_contents(root_name, data):
+    """Save the list of files that have been merged within a ROOT file,
+    to a log file.
+
+    Args:
+        root_name (str): the name of the ROOT file.
+        data (list): the list of files merged.
+    """
+    root_name = os.path.basename(root_name)
+    data = ["    {}".format(os.path.basename(name)) for name in data]
+    merge_type = "Successful" if len(data) == 11 else "Partial"
+    stars = "*" * 40
+    with open(CONTENT, "a") as file_:
+        file_.write("{}\n".format(stars))
+        file_.write("*{:^38s}*\n".format(merge_type + " merge"))
+        file_.write("{}\n".format(stars))
+        file_.write("Merge time:    {}\n".format(
+                    time.strftime("%Y %m %d %H:%M:%S"))) 
+        file_.write("Merged file:    {}\n".format(root_name))
+        file_.write("Contains:\n{}\n".format("\n".join(data)))
+        file_.write("{}\n".format(stars))
+
+
 @dir_restore
 def merge(start, data, debug=False):
     """
     Merge the gathered files using time2root.
     """
-    DEVNULL = open(os.devnull, 'wb')
     output_filename = time.strftime(TimeExtractor.osc_time, start) + ".root"
     # get absolute path to output files
     output_path = os.path.join(OUTPUT_DIR, output_filename)
@@ -215,7 +240,6 @@ def merge(start, data, debug=False):
                           file_.split('/')[-1],
                           out)
             logging.error("Error message and output: %s %s", output, err)
-    DEVNULL.close()
 
 
 def save_processed(filename, processed):
