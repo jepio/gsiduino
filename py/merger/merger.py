@@ -284,13 +284,13 @@ def loop(processed):
             logging.info("Successfully merged injection@%s",
                          time.strftime("%m.%d.%H.%M.%S", start))
         processed.add(start)
-        save_processed("processed.list", set([start]))
+        save_processed(PROCESS, set([start]))
     logging.info("Finished loop")
 
 
 def backup_list():
     """Backup the list of processed injections to a different directory"""
-    shutil.copy("processed.list", "/hera/sids/")
+    shutil.copy(PROCESS, "/hera/sids/")
 
 
 def main():
@@ -300,7 +300,7 @@ def main():
     """
     i = 0
     os.chdir(DATA_DIR)
-    processed = get_processed("processed.list")
+    processed = get_processed(PROCESS)
     while True:
         loop(processed)
         backup_list()
