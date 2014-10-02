@@ -9,24 +9,25 @@ import time
 import glob
 import cPickle as pickle
 import shutil
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from functools import wraps
 
 ############
 # Settings #
 ############
 # data
-DATA_DIR = "/hera/sids/oscillation_test/autocopy_tests"
-RSA51 = os.path.join(DATA_DIR, "rsa51")
-RSA52 = os.path.join(DATA_DIR, "rsa52")
-RSA30 = os.path.join(DATA_DIR, "rsa30")
-OSC_DIR = os.path.join(DATA_DIR, "osc")
+DATA_DIR = "/hera/sids/GO2014"
+RSA51 = os.path.join(DATA_DIR, "RSA51")
+RSA52 = os.path.join(DATA_DIR, "RSA52")
+RSA30 = os.path.join(DATA_DIR, "RSA30")
+OSC_DIR = os.path.join(DATA_DIR, "Oscil")
 OSC_CHANS = ("C1", "C2", "C3", "C4")
 REF_CHAN = os.path.join(OSC_DIR, "C2")
 # path to time2root
-T2R = "/hera/sids/visual_analysis/time2root/time2root"
-OUTPUT_DIR = os.path.join(DATA_DIR, "root")
-LOGFILE = os.path.join(DATA_DIR, "merging.log")
+T2R = "/data.local2/time2root/time2root"
+OUTPUT_DIR = os.path.join(DATA_DIR, "ROOT")
+LOGFILE = os.path.join(DATA_DIR, "Merger", "merging.log")
+PROCESS = os.path.join(DATA_DIR, "Merger", "processed.list")
 PERIOD = 30  # seconds
 
 
