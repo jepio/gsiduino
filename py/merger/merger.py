@@ -123,27 +123,32 @@ def create_range_predicate(start, stop, tolerance=0):
     return predicate
 
 
-def check_output(n, message):
+def check_output(n, message, minimum):
     """
     Decorator: check output of function, if function returns list of
-    length n everything is alright, else use message to construct an
-    error message.
+    length n everything is alright (or atleast more than the minimum),
+    else use message to construct an error message.
     """
     def decorator(func):
         @wraps(func)
         def decorated(start, *args):
             data = func(start, *args)
             if len(data) != n:
-                logging.error("Injection@%s: found %d %s files",
+                logging.warning("Injection@%s: found %d %s files",
                               time.strftime("%m.%d.%H.%M.%S", start),
                               len(data), message)
-                data = []
+                if len(data) < minimum or len(data) > n:
+                    logging.error("Injection@%s: amount of %s files is not "
+                                  "between %d and %d.",
+                                  time.strftime("%m.%d.%H.%M.%S", start),
+                                   message, minimum, d)
+                    data = []
             return data
         return decorated
     return decorator
 
 
-@check_output(4, "osc inj")
+@check_output(4, "osc inj", 4)
 def get_inj_files(start):
     """Retrieve oscilloscope injection files"""
     data = []
@@ -156,7 +161,7 @@ def get_inj_files(start):
     return data
 
 
-@check_output(4, "osc ext")
+@check_output(4, "osc ext", 4)
 def get_ext_files(start, predicate):
     """Retrieve oscilloscope extraction files"""
     data = []
@@ -175,18 +180,24 @@ def get_osc_files(start, predicate):
     return data
 
 
-@check_output(2, "rsa50")
+@check_output(2, "rsa50", 1)
 def get_rsa50_files(start, predicate):
     data = []
-    for rsa in (RSA51, RSA52):
-        glob_str = "{rsa}/*.TIQ".format(rsa=rsa)
-        found_files = [f for f in glob.glob(glob_str)
-                       if predicate(TimeExtractor.rsa50(f))]
-        data += found_files
+    glob_str = "{rsa}/*.TIQ".format(rsa=RSA52)
+    found_files = [f for f in glob.glob(glob_str)
+                   if predicate(TimeExtractor.rsa50(f))]
+    data += found_files
+    glob_str = "{rsa}/*.TIQ".format(rsa=RSA51)
+    found_files = [f for f in glob.glob(glob_str)
+                   if predicate(TimeExtractor.rsa50(f))]
+    found_rsa51 = True if len(found_files) == 1 else False
+    data += found_files
+    if not found_rsa51:
+        data = []
     return data
 
 
-@check_output(1, "rsa30")
+@check_output(1, "rsa30", 0)
 def get_rsa30_files(start, predicate):
     glob_str = "{rsa}/*.iqt".format(rsa=RSA30)
     found_files = [f for f in glob.glob(glob_str)
@@ -296,20 +307,26 @@ def loop(processed):
         predicate = create_range_predicate(start, stop)
         data2merge = []
         data2merge += get_osc_files(start, predicate)
-        data2merge += get_rsa50_files(start, predicate)
+        rsa50_files = get_rsa50_files(start, predicate)
+        found_rsa51 = True if len(rsa50_files) > 1 else False
+        data2merge += rsa50_files
         data2merge += get_rsa30_files(start, predicate)
-        if len(data2merge) != 11:
+        if found_rsa51 and 9 <= len(data2merge) <= 11:
+            merge(start, data2merge)
+            logging.info("Successfully merged injection@%s",
+                         time.strftime("%m.%d.%H.%M.%S", start))
+        else:
             if time.mktime(stop) - time.mktime(start) > 1.5 * 60:
                 logging.error("Injection@%s had next inj after "
                               "%d seconds",
                               time.strftime("%m.%d.%H.%M.%S", start),
                               time.mktime(stop) - time.mktime(start))
+            if not found_rsa51:
+                logging.error("Injection@%s: did not find 1 rsa51 file",
+                              time.strftime("%m.%d.%H.%M.%S", start),
+                              len(data), message)
             logging.error("Injection@%s could not be merged",
                           time.strftime("%m.%d.%H.%M.%S", start))
-        else:
-            merge(start, data2merge)
-            logging.info("Successfully merged injection@%s",
-                         time.strftime("%m.%d.%H.%M.%S", start))
         processed.add(start)
         save_processed(PROCESS, set([start]))
     logging.info("Finished loop")
