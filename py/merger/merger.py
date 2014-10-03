@@ -141,7 +141,7 @@ def check_output(n, message, minimum):
                     logging.error("Injection@%s: amount of %s files is not "
                                   "between %d and %d.",
                                   time.strftime("%m.%d.%H.%M.%S", start),
-                                   message, minimum, d)
+                                   message, minimum, n)
                     data = []
             return data
         return decorated
@@ -222,7 +222,7 @@ def log_contents(root_name, data):
         file_.write("*{:^38s}*\n".format(merge_type + " merge"))
         file_.write("{}\n".format(stars))
         file_.write("Merge time:    {}\n".format(
-                    time.strftime("%Y %m %d %H:%M:%S"))) 
+                    time.strftime("%Y-%m-%d %H:%M:%S"))) 
         file_.write("Merged file:    {}\n".format(root_name))
         file_.write("Contains:\n{}\n".format("\n".join(data)))
         file_.write("{}\n".format(stars))
@@ -237,7 +237,7 @@ def merge(start, data, debug=False):
     # get absolute path to output files
     output_path = os.path.join(OUTPUT_DIR, output_filename)
     # get absolute path to input files
-    data = (os.path.abspath(file_) for file_ in data)
+    data = [os.path.abspath(file_) for file_ in data]
     # change directory to time2root dir
     os.chdir(os.path.dirname(T2R))
     for file_ in data:
@@ -251,6 +251,7 @@ def merge(start, data, debug=False):
                           file_.split('/')[-1],
                           out)
             logging.error("Error message and output: %s %s", output, err)
+    log_contents(output_filename, data)
 
 
 def save_processed(filename, processed):
@@ -308,7 +309,7 @@ def loop(processed):
         data2merge = []
         data2merge += get_osc_files(start, predicate)
         rsa50_files = get_rsa50_files(start, predicate)
-        found_rsa51 = True if len(rsa50_files) > 1 else False
+        found_rsa51 = True if len(rsa50_files) >= 1 else False
         data2merge += rsa50_files
         data2merge += get_rsa30_files(start, predicate)
         if found_rsa51 and 9 <= len(data2merge) <= 11:
@@ -323,8 +324,7 @@ def loop(processed):
                               time.mktime(stop) - time.mktime(start))
             if not found_rsa51:
                 logging.error("Injection@%s: did not find 1 rsa51 file",
-                              time.strftime("%m.%d.%H.%M.%S", start),
-                              len(data), message)
+                              time.strftime("%m.%d.%H.%M.%S", start))
             logging.error("Injection@%s could not be merged",
                           time.strftime("%m.%d.%H.%M.%S", start))
         processed.add(start)
