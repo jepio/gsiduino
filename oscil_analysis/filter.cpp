@@ -18,7 +18,7 @@ bool filter::process(const string& time_str)
 	return temp <= pt;
 }
 
-vector<string>::iterator filter::process(vector<string>& str_v)
+auto filter::process(vector<string>& str_v) -> decltype(end(str_v))
 {
 	auto e = std::remove_if(begin(str_v), end(str_v), [this](const string& str){
 		return !process(str);

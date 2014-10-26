@@ -20,6 +20,6 @@ public:
 	ptime pt;
 	filter(const string & time_str);
 	bool process(const string& time_str);
-	vector<string>::iterator process(vector<string>& str_v);
+	auto process(vector<string>& str_v) -> decltype(end(str_v));
 };
 
