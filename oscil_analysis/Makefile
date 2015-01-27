@@ -1,10 +1,10 @@
 CXX = g++
 CC := $(CXX)
 
-CXXFLAGS += -Wall
-CXXFLAGS += -fopenmp -O3 $(shell root-config --cflags) -std=c++11
+CXXFLAGS += -Wall -O3 -std=c++11 -fopenmp $(shell root-config --cflags)
 
-LDFLAGS += -fopenmp -O3 -std=c++11 $(shell root-config --libs) -lboost_filesystem -lboost_system
+LDLIBS = -fopenmp $(shell root-config --libs) -lboost_filesystem -lboost_system
+LDFLAGS += -Wl,-O1 -Wl,--as-needed $(shell root-config --ldflags)
 
 all: oscilloscope
 
