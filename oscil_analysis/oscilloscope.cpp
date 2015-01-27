@@ -1,17 +1,25 @@
 // vim: number:ai:si:ts=4:et:sw=4:st=4
-#include "filter.h"
-#include <TNtuple.h>
-#include <TFile.h>
+// stdlib
 #include <fstream>
 #include <algorithm>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <utility>
+#include <iomanip>
+// local
+#include "filter.h"
+// root
+#include <TNtuple.h>
+#include <TFile.h>
+// boost
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/replace.hpp>
+// omp
+#ifdef _OPENMP
 #include <omp.h>
-#include <iomanip>
+#endif
+
 using std::vector;
 using std::string;
 
@@ -90,12 +98,14 @@ int main()
     {
         #pragma omp single
         {
+#ifdef _OPENMP
             std::cout << "Have " << omp_get_num_threads() << " threads\n";
+#endif
         }
     }
     std::cout << "Total files: " << N << std::endl;
 
-    std::cout << std::fixed << std::setprecision(2) << std::setw(6) 
+    std::cout << std::fixed << std::setprecision(2) << std::setw(6)
               << std::setfill(' ') << std::right;
 
     #pragma omp parallel for schedule(dynamic,4) default(none) private(curr,f) shared(list,N,inj,ext,std::cout)
@@ -107,10 +117,10 @@ int main()
             curr = &ext;
         else if (type == "inj")
             curr = &inj;
-        else 
+        else
             curr = nullptr;
         f[0] = read_file(list[i]);
-        for (int j=2;j<=4;++j){
+        for (int j = 2; j <= 4; ++j) {
             auto s = mod_path(list[i],j);
             f[j-1] = read_file(s);
         }
@@ -132,5 +142,4 @@ int main()
     ofile.Close();
     std::cout << "\n" << list[0]<< std::endl;
 }
-
 
