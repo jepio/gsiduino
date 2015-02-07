@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 import os
 
 __all__ = ["get_config"]
@@ -7,7 +7,7 @@ KEYS = ("PERIOD", "THREAD_LIMIT", "HOST", "REMOTE_FOLDER", "PATH_TO_REMOTE",
         "PATH_TO_DATA", "LOGFILE", "FILE_LIST", "PSCP", "GLOBSTR", "rename")
 
 def get_config(filename):
-    parser = ConfigParser.SafeConfigParser()
+    parser = configparser.SafeConfigParser()
     parser.optionxform = str 
     parser.read(filename)
 
