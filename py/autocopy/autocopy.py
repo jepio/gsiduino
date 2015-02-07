@@ -9,41 +9,12 @@ from subprocess import Popen, PIPE
 from pprint import pformat
 import osc
 from concurrent.futures import ThreadPoolExecutor
+from config import get_config
 
-
-##################
-#    Settings    #
-##################
-PERIOD = 5  # seconds
-THREAD_LIMIT = 2  # limit concurrently copied files
-# Remote host
-HOST = ""  # get your own
-# Remote folder
-REMOTE_FOLDER = "tmp"
-# Folder to which data will be saved. Needs to exist.
-PATH_TO_REMOTE = posixpath.join("%s:." % HOST, REMOTE_FOLDER)
-# Folder with data to be uploaded to remote
-PATH_TO_DATA = os.path.join("D:\\", "temp", "data_transfer", "folder")
-# The name of the log file to be used by the logging module.
-# Default location:
-#   cwd
-LOGFILE = "autocopy.log"
-LOGFILE = os.path.join(os.getcwd(), LOGFILE)
-# The list of files that have been copied already - uses pickle to prevent
-# having to parse the log file
-FILE_LIST = "file.list"
-FILE_LIST = os.path.join(os.getcwd(), FILE_LIST)
-# Path to the putty scp client
-PSCP = "pscp"
-# The glob string used to search for files - I recommend this one for the oscilloscope,
-# for the S/A's you can use the basename, possibly with the file extension
-GLOBSTR = "*_2014*.csv"
+# get config from file
+globals().update(get_config("config.ini"))
 # logger, has to be defined here, but don't modify
 logger = None
-# leave this setting for spectrum analyzers, change to True for oscilloscope
-rename = False
-##################
-
 
 def check_access(fname, limit=30):
     """Return True if last file modification was more than limit seconds ago."""
