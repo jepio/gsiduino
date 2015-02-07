@@ -5,11 +5,10 @@ import posixpath
 import time
 import pickle
 import logging
-import threading
 from subprocess import Popen, PIPE
 from pprint import pformat
-from collections import deque
 import osc
+from concurrent.futures import ThreadPoolExecutor
 
 
 ##################
@@ -139,7 +138,7 @@ class FileListBuilder:
         return processed
 
 
-def handle_process(in_tup, deq):
+def handle_process(in_tup):
     """Append the filename to deque if copying it ends with a 0 output code."""
     proc, fname = in_tup
     outcome = proc.poll()
@@ -147,7 +146,7 @@ def handle_process(in_tup, deq):
         outcome = proc.wait()
     if outcome == 0:
         logger.info("Transferred file: '%s'", fname)
-        deq.append(fname)
+        return fname
     else:
         logger.error("Error in file '%s', code %d", fname, outcome)
         logger.error("Error output: %s",
@@ -158,37 +157,16 @@ def transfer_files(files):
     # for each new file start copying (asynchronously)
     # creates a generator object that be used to late start the copying
     processes = (copy_file(file_) for file_ in files)
-    # deque for gathering data from threads
-    deq = deque()
     
     # threaded version
-    threads = []
-    def join_threads():
-        # access to threads
-        nonlocal threads
-        # join all threads
-        for thread in threads:
-            thread.join()
-        # clear list
-        threads = []
-    # wait for end of transfer
-    for i, proc in enumerate(processes):
-        if i % THREAD_LIMIT == 0:
-            # join started threads before spawning new ones
-            join_threads()
-        thread = threading.Thread(target=handle_process,
-                                  args=(proc, deq))
-        thread.start()
-        threads.append(thread)
-    else:
-        # will execute as the last statement
-        join_threads()
-
+    with ThreadPoolExecutor(max_workers=THREAD_LIMIT) as ex:
+        results = ex.map(handle_process, processes)
+        transferred = set(deq)
+        transferred.discard(None)
     # serial version:
     # process = [proc for proc in processes]
     # for proc in processes:
     #     handle_process(proc, dq)
-    transferred = set(deq)
     return transferred
 
 def timing(func):
