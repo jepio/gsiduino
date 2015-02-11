@@ -112,9 +112,7 @@ class FileListBuilder:
 def handle_process(in_tup):
     """Append the filename to deque if copying it ends with a 0 output code."""
     proc, fname = in_tup
-    outcome = proc.poll()
-    if outcome is None:
-        outcome = proc.wait()
+    outcome = proc.wait()
     if outcome == 0:
         logger.info("Transferred file: '%s'", fname)
         return fname
@@ -132,7 +130,7 @@ def transfer_files(files):
     # threaded version
     with ThreadPoolExecutor(max_workers=THREAD_LIMIT) as ex:
         results = ex.map(handle_process, processes)
-        transferred = set(deq)
+        transferred = set(results)
         transferred.discard(None)
     # serial version:
     # process = [proc for proc in processes]
